@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <h1>Chat Room</h1>
+    <p>Welcome, <%= username %>! <a href="#" id="backToPosts">Back to Posts</a></p>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+        <input id="input" autocomplete="off" placeholder="Type a message..." /><button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token') || localStorage.getItem('token');
+        if (!token) window.location.href = '/login';
+        localStorage.setItem('token', token);
+
+        document.getElementById('backToPosts').addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = `/posts?token=${encodeURIComponent(token)}`;
+        });
+
+        const socket = io({
+            auth: { token }
+        });
+
+        socket.emit('set username', '<%= username %>');
+
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', input.value);
+                input.value = '';
+            }
+        });
+
+        socket.on('chat message', (msg) => {
+            const item = document.createElement('li');
+            item.textContent = `${msg.username}: ${msg.message}`;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
+
+        fetch('/chat', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+    </script>
+</body>
+
+</html>

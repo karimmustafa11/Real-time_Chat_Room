@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Posts</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <h1>Team Posts</h1>
+    <p>Welcome, <%= username %>! <a href="#" id="goToChat">Go to Chat</a></p>
+    <form id="postForm">
+        <textarea name="content" placeholder="Write your post..." required></textarea><br>
+        <button type="submit">Post</button>
+    </form>
+    <h2>All Posts</h2>
+    <% if (posts.length===0) { %>
+        <p>No posts yet.</p>
+        <% } else { %>
+            <ul>
+                <% posts.forEach(post=> { %>
+                    <li><strong>
+                            <%= post.username %>:
+                        </strong>
+                        <%= post.content %>
+                    </li>
+                    <% }) %>
+            </ul>
+            <% } %>
+
+                <script>
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const token = urlParams.get('token') || localStorage.getItem('token');
+                    if (!token) window.location.href = '/login';
+                    localStorage.setItem('token', token);
+
+                    document.getElementById('goToChat').addEventListener('click', (e) => {
+                        e.preventDefault();
+                        window.location.href = `/chat?token=${encodeURIComponent(token)}`;
+                    });
+
+                    document.getElementById('postForm').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.target);
+                        const content = formData.get('content');
+
+                        await fetch('/posts', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: new URLSearchParams({ content })
+                        });
+
+                        window.location.reload();
+                    });
+
+                    fetch('/posts', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                </script>
+</body>
+
+</html>
